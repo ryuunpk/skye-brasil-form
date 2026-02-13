@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Sistema Seguro de Formulário</title>
+    <style>
+        /* Reset e Variáveis */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-blue: #2196F3;
+            --danger-red: #f44336;
+            --success-green: #4CAF50;
+            --warning-yellow: #ffc107;
+            --info-blue: #00bcd4;
+            --dark-bg: #1e1e1e;
+            --card-bg: white;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            --mobile-breakpoint: 768px;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: background 0.3s ease;
+        }
+
+        /* Utilitários */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Autenticação */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-box h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+
+        .auth-btn:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .github-btn {
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .github-btn:hover:not(:disabled) {
+            background: #222;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        /* Interface Principal */
+        .main-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        /* Menu Hamburguer */
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #333;
+            transition: 0.3s;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: var(--shadow);
+            transition: left 0.3s ease;
+            z-index: 99;
+            padding: 80px 20px 20px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                width: 100%;
+                left: -100%;
+            }
+        }
+
+        .dashboard.open {
+            left: 0;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .add-btn {
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .add-btn-green {
+            background: var(--success-green);
+        }
+
+        .add-btn-blue {
+            background: var(--primary-blue);
+        }
+
+        .question-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .question-text {
+            word-break: break-word;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .delete-btn {
+            background: var(--danger-red);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        /* Terminal */
+        .terminal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            background: var(--dark-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: none;
+            z-index: 98;
+        }
+
+        @media (max-width: 768px) {
+            .terminal {
+                width: calc(100% - 40px);
+                left: 20px;
+                right: 20px;
+            }
+        }
+
+        .terminal.open {
+            display: block;
+        }
+
+        .terminal-header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .terminal-content {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-word;
+        }
+
+        .log-error { background: rgba(244, 67, 54, 0.2); color: #ff8a80; }
+        .log-login { background: rgba(33, 150, 243, 0.2); color: #90caf9; }
+        .log-add { background: rgba(76, 175, 80, 0.2); color: #a5d6a7; }
+        .log-delete { background: rgba(255, 193, 7, 0.2); color: #ffe082; }
+
+        /* Área de Respostas */
+        .responses-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 440px;
+            width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: none;
+            z-index: 98;
+        }
+
+        @media (max-width: 768px) {
+            .responses-panel {
+                width: calc(100% - 40px);
+                left: 20px;
+                right: 20px;
+                top: 80px;
+                bottom: 20px;
+            }
+        }
+
+        .responses-panel.open {
+            display: block;
+        }
+
+        .responses-header {
+            background: var(--info-blue);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .responses-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .responses-content {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .response-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .response-question {
+            background: #f5f5f5;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .response-answers {
+            display: none;
+            padding: 10px;
+        }
+
+        .response-answers.show {
+            display: block;
+        }
+
+        .answer-item {
+            padding: 8px;
+            background: #f9f9f9;
+            margin: 5px 0;
+            border-radius: 5px;
+            word-break: break-word;
+        }
+
+        /* Conteúdo Principal */
+        .content {
+            padding: 80px 20px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+            transition: opacity 0.3s;
+        }
+
+        .form-title.hidden-title {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .question-container {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .question-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+            word-break: break-word;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .submit-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Painel de Customização */
+        .customize-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 97;
+        }
+
+        @media (max-width: 768px) {
+            .customize-panel {
+                left: 20px;
+                right: 20px;
+                top: 80px;
+            }
+        }
+
+        .customize-panel.open {
+            display: block;
+        }
+
+        .color-input {
+            width: 100%;
+            height: 40px;
+            margin: 5px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div id="loadingSpinner" class="spinner hidden"></div>
+
+    <!-- Autenticação -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <h2>Login Seguro</h2>
+            <input type="email" class="auth-input" id="emailInput" placeholder="Email" value="caiocaiosebastianpereiradossan@gmail.com">
+            <button class="auth-btn" onclick="loginWithEmail()" id="emailLoginBtn">Entrar com Email</button>
+            <div class="divider">ou</div>
+            <button class="auth-btn github-btn" onclick="loginWithGithub()" id="githubLoginBtn">
+                <svg height="20" width="20" viewBox="0 0 16 16" fill="white">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+                Entrar com GitHub
+            </button>
+            <div id="authError" style="color: red; text-align: center; margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container" id="mainContainer">
+        <!-- Menu Hamburguer -->
+        <button class="menu-toggle" onclick="toggleDashboard()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <div class="dashboard-header">
+                <h3>Dashboard</h3>
+                <button class="add-btn" id="addQuestionBtn" onclick="addQuestion()">+</button>
+            </div>
+            <div id="questionsList"></div>
+            
+            <div style="margin-top: 20px;">
+                <button class="auth-btn" onclick="toggleTerminal()" style="margin: 5px 0;">📟 Terminal</button>
+                <button class="auth-btn" style="background: var(--info-blue); margin: 5px 0;" onclick="toggleResponses()">📋 Ver Respostas</button>
+                <button class="auth-btn" style="background: var(--warning-yellow); margin: 5px 0;" onclick="toggleCustomize()">🎨 Customizar</button>
+                <button class="auth-btn" style="background: var(--danger-red); margin: 5px 0;" onclick="logout()">🚪 Sair</button>
+            </div>
+        </div>
+
+        <!-- Terminal -->
+        <div class="terminal" id="terminal">
+            <div class="terminal-header">
+                <span>Terminal de Logs</span>
+                <button class="terminal-close" onclick="toggleTerminal()">×</button>
+            </div>
+            <div class="terminal-content" id="terminalContent"></div>
+        </div>
+
+        <!-- Painel de Respostas -->
+        <div class="responses-panel" id="responsesPanel">
+            <div class="responses-header">
+                <span>Respostas do Formulário</span>
+                <button class="responses-close" onclick="toggleResponses()">×</button>
+            </div>
+            <div class="responses-content" id="responsesContent"></div>
+        </div>
+
+        <!-- Painel de Customização -->
+        <div class="customize-panel" id="customizePanel">
+            <h4>Customizar Título</h4>
+            <input type="text" class="auth-input" id="titleInput" placeholder="Título do formulário" onchange="updateTitle()">
+            <div style="display: flex; align-items: center; margin: 10px 0;">
+                <input type="checkbox" id="hideTitleCheckbox" onchange="toggleTitleVisibility()">
+                <label for="hideTitleCheckbox" style="margin-left: 5px;">Ocultar título</label>
+            </div>
+            <h4>Cores de Fundo</h4>
+            <input type="color" class="color-input" id="color1" value="#667eea" onchange="updateGradient()">
+            <input type="color" class="color-input" id="color2" value="#764ba2" onchange="updateGradient()">
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="content">
+            <h1 class="form-title" id="formTitle"></h1>
+            <div id="formQuestions"></div>
+            <button class="submit-btn" onclick="submitForm()" id="submitFormBtn">
+                <span>✈️</span> Enviar Respostas
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÕES DE SEGURANÇA ====================
+        const MAX_QUESTIONS = 50;
+        const MAX_QUESTION_LENGTH = 200;
+        const MAX_RESPONSES = 1000;
+        const MAX_LOGS = 100;
+        const SESSION_TIMEOUT = 3600000; // 1 hora
+
+        // Usuários autorizados (em produção, isso viria de um backend)
+        const AUTHORIZED_USERS = {
+            emails: ['caiocaiosebastianpereiradossan@gmail.com'],
+            github: ['ryuunpk']
+        };
+
+        // ==================== ESTADO DA APLICAÇÃO ====================
+        let currentUser = null;
+        let questions = [];
+        let responses = [];
+        let logs = [];
+        let settings = {};
+        let loginTime = null;
+
+        // ==================== INICIALIZAÇÃO SEGURA ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            try {
+                showLoading(true);
+                
+                // Carregar dados de forma segura
+                loadSecureData();
+                
+                // Verificar autenticação
+                checkSecureAuth();
+                
+                // Aplicar configurações
+                applySettings();
+                
+                // Renderizar interface
+                renderQuestions();
+                
+                // Iniciar verificador de sessão
+                startSessionChecker();
+                
+                showLoading(false);
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showError('Erro ao inicializar aplicação');
+                showLoading(false);
+            }
+        }
+
+        // ==================== FUNÇÕES DE SEGURANÇA ====================
+        function sanitizeString(str) {
+            if (!str) return '';
+            
+            // Converter para string
+            str = String(str);
+            
+            // Remover caracteres perigosos
+            str = str.replace(/[<>\/\\]/g, '');
+            
+            // Limitar tamanho
+            if (str.length > MAX_QUESTION_LENGTH) {
+                str = str.substring(0, MAX_QUESTION_LENGTH);
+            }
+            
+            // Escapar HTML
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function validateEmail(email) {
+            if (!email || typeof email !== 'string') return false;
+            
+            email = email.trim().toLowerCase();
+            
+            // Regex mais rigoroso para email
+            const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+            
+            return emailRegex.test(email) && email.length <= 254;
+        }
+
+        function isAuthorized(user) {
+            if (!user) return false;
+            
+            // Verificar email
+            if (user.email && AUTHORIZED_USERS.emails.includes(user.email.toLowerCase())) {
+                return true;
+            }
+            
+            // Verificar github
+            if (user.github && AUTHORIZED_USERS.github.includes(user.github)) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        function generateSessionToken(user) {
+            // Em produção, isso seria feito no backend
+            const data = {
+                user: user,
+                timestamp: Date.now(),
+                random: Math.random().toString(36).substring(2)
+            };
+            
+            // Simular um token (em produção, usar JWT ou similar)
+            return btoa(JSON.stringify(data));
+        }
+
+        function verifySessionToken(token) {
+            try {
+                const data = JSON.parse(atob(token));
+                
+                // Verificar se token expirou
+                if (Date.now() - data.timestamp > SESSION_TIMEOUT) {
+                    return null;
+                }
+                
+                return data.user;
+            } catch {
+                return null;
+            }
+        }
+
+        // ==================== CARREGAMENTO SEGURO DE DADOS ====================
+        function loadSecureData() {
+            try {
+                // Carregar perguntas
+                const savedQuestions = localStorage.getItem('secure_questions');
+                if (savedQuestions) {
+                    const parsed = JSON.parse(savedQuestions);
+                    if (Array.isArray(parsed)) {
+                        questions = parsed.slice(0, MAX_QUESTIONS).map(q => sanitizeString(q));
+                    }
+                }
+                
+                // Carregar respostas
+                const savedResponses = localStorage.getItem('secure_responses');
+                if (savedResponses) {
+                    const parsed = JSON.parse(savedResponses);
+                    if (Array.isArray(parsed)) {
+                        responses = parsed.slice(-MAX_RESPONSES).map(r => ({
+                            ...r,
+                            answers: Object.fromEntries(
+                                Object.entries(r.answers || {}).map(([k, v]) => [sanitizeString(k), sanitizeString(v)])
+                            ),
+                            user: sanitizeString(r.user),
+                            timestamp: r.timestamp
+                        }));
+                    }
+                }
+                
+                // Carregar logs (limitados)
+                const savedLogs = localStorage.getItem('secure_logs');
+                if (savedLogs) {
+                    const parsed = JSON.parse(savedLogs);
+                    if (Array.isArray(parsed)) {
+                        logs = parsed.slice(-MAX_LOGS);
+                    }
+                }
+                
+                // Carregar configurações
+                const savedSettings = localStorage.getItem('secure_settings');
+                if (savedSettings) {
+                    settings = JSON.parse(savedSettings);
+                } else {
+                    settings = {
+                        title: '',
+                        hideTitle: true,
+                        color1: '#667eea',
+                        color2: '#764ba2'
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                // Reset em caso de erro
+                questions = [];
+                responses = [];
+                logs = [];
+                settings = {
+                    title: '',
+                    hideTitle: true,
+                    color1: '#667eea',
+                    color2: '#764ba2'
+                };
+            }
+        }
+
+        function saveSecureData() {
+            try {
+                localStorage.setItem('secure_questions', JSON.stringify(questions.slice(-MAX_QUESTIONS)));
+                localStorage.setItem('secure_responses', JSON.stringify(responses.slice(-MAX_RESPONSES)));
+                localStorage.setItem('secure_logs', JSON.stringify(logs.slice(-MAX_LOGS)));
+                localStorage.setItem('secure_settings', JSON.stringify(settings));
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+                addLog('Erro ao salvar dados', 'error');
+            }
+        }
+
+        // ==================== AUTENTICAÇÃO SEGURA ====================
+        function checkSecureAuth() {
+            try {
+                const token = localStorage.getItem('secure_token');
+                if (token) {
+                    const user = verifySessionToken(token);
+                    if (user && isAuthorized(user)) {
+                        currentUser = user;
+                        loginTime = Date.now();
+                        showMainInterface();
+                        addLog('Login automático realizado', 'login');
+                    } else {
+                        // Token inválido ou expirado
+                        localStorage.removeItem('secure_token');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                localStorage.removeItem('secure_token');
+            }
+        }
+
+        function loginWithEmail() {
+            const emailBtn = document.getElementById('emailLoginBtn');
+            const emailInput = document.getElementById('emailInput');
+            const errorDiv = document.getElementById('authError');
+            
+            try {
+                emailBtn.disabled = true;
+                errorDiv.textContent = '';
+                
+                const email = emailInput.value.trim().toLowerCase();
+                
+                // Validar email
+                if (!validateEmail(email)) {
+                    throw new Error('Email inválido');
+                }
+                
+                // Verificar autorização
+                if (!AUTHORIZED_USERS.emails.includes(email)) {
+                    throw new Error('Email não autorizado');
+                }
+                
+                // Login bem-sucedido
+                const user = { email: email };
+                const token = generateSessionToken(user);
+                
+                localStorage.setItem('secure_token', token);
+                currentUser = user;
+                loginTime = Date.now();
+                
+                addLog('Login realizado com email: ' + email, 'login');
+                showMainInterface();
+                
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                addLog('Falha no login por email: ' + error.message, 'error');
+            } finally {
+                emailBtn.disabled = false;
+            }
+        }
+
+        function loginWithGithub() {
+            const githubBtn = document.getElementById('githubLoginBtn');
+            const errorDiv = document.getElementById('authError');
+            
+            try {
+                githubBtn.disabled = true;
+                errorDiv.textContent = '';
+                
+                // Simulação de login GitHub (em produção, usar OAuth real)
+                const githubUser = 'ryuunpk';
+                
+                if (!AUTHORIZED_USERS.github.includes(githubUser)) {
+                    throw new Error('Conta GitHub não autorizada');
+                }
+                
+                // Login bem-sucedido
+                const user = { github: githubUser };
+                const token = generateSessionToken(user);
+                
+                localStorage.setItem('secure_token', token);
+                currentUser = user;
+                loginTime = Date.now();
+                
+                addLog('Login realizado com GitHub: ' + githubUser, 'login');
+                showMainInterface();
+                
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                addLog('Falha no login por GitHub: ' + error.message, 'error');
+            } finally {
+                githubBtn.disabled = false;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('secure_token');
+            currentUser = null;
+            loginTime = null;
+            
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('mainContainer').style.display = 'none';
+            
+            // Fechar painéis
+            document.getElementById('dashboard').classList.remove('open');
+            document.getElementById('terminal').classList.remove('open');
+            document.getElementById('responsesPanel').classList.remove('open');
+            document.getElementById('customizePanel').classList.remove('open');
+            
+            addLog('Logout realizado', 'login');
+        }
+
+        function startSessionChecker() {
+            setInterval(() => {
+                if (currentUser && loginTime) {
+                    if (Date.now() - loginTime > SESSION_TIMEOUT) {
+                        addLog('Sessão expirada', 'login');
+                        logout();
+                    }
+                }
+            }, 60000); // Verificar a cada minuto
+        }
+
+        // ==================== INTERFACE ====================
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.remove('hidden');
+            } else {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            // Implementar toast ou notificação
+            alert(message);
+        }
+
+        function showMainInterface() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+        }
+
+        // Dashboard
+        function toggleDashboard() {
+            document.getElementById('dashboard').classList.toggle('open');
+        }
+
+        // ==================== QUESTÕES ====================
+        function renderQuestions() {
+            const questionsList = document.getElementById('questionsList');
+            const formQuestions = document.getElementById('formQuestions');
+            const addBtn = document.getElementById('addQuestionBtn');
+            
+            // Atualizar cor do botão +
+            if (questions.length === 0) {
+                addBtn.className = 'add-btn add-btn-green';
+            } else {
+                addBtn.className = 'add-btn add-btn-blue';
+            }
+            
+            if (questions.length === 0) {
+                questionsList.innerHTML = '<p>Nenhuma pergunta ainda. Clique no + para adicionar.</p>';
+                formQuestions.innerHTML = '<p style="color: white; text-align: center;">Nenhuma pergunta disponível.</p>';
+                return;
+            }
+
+            // Renderizar no dashboard (com segurança)
+            questionsList.innerHTML = questions.map((q, index) => `
+                <div class="question-card">
+                    <span class="question-text">${sanitizeString(q)}</span>
+                    <button class="delete-btn" onclick="deleteQuestion(${index})">🗑️</button>
+                </div>
+            `).join('');
+
+            // Renderizar no formulário (com segurança)
+            formQuestions.innerHTML = questions.map((q, index) => `
+                <div class="question-container">
+                    <label class="question-label">${sanitizeString(q)}</label>
+                    <input type="text" class="question-input" id="answer-${index}" placeholder="Sua resposta..." maxlength="500">
+                </div>
+            `).join('');
+        }
+
+        function addQuestion() {
+            const question = prompt('Digite a pergunta:');
+            if (!question) return;
+            
+            const sanitizedQuestion = sanitizeString(question);
+            
+            if (sanitizedQuestion.length === 0) {
+                alert('Pergunta inválida');
+                return;
+            }
+            
+            if (questions.length >= MAX_QUESTIONS) {
+                alert(`Máximo de ${MAX_QUESTIONS} perguntas atingido`);
+                return;
+            }
+            
+            questions.push(sanitizedQuestion);
+            saveSecureData();
+            renderQuestions();
+            addLog('Pergunta adicionada: ' + sanitizedQuestion.substring(0, 50) + '...', 'add');
+        }
+
+        function deleteQuestion(index) {
+            if (index >= 0 && index < questions.length) {
+                const deleted = questions[index];
+                questions.splice(index, 1);
+                saveSecureData();
+                renderQuestions();
+                addLog('Pergunta deletada: ' + sanitizeString(deleted).substring(0, 50) + '...', 'delete');
+            }
+        }
+
+        // ==================== TERMINAL ====================
+        function toggleTerminal() {
+            document.getElementById('terminal').classList.toggle('open');
+            updateTerminal();
+        }
+
+        function addLog(message, type) {
+            const log = {
+                message: sanitizeString(message),
+                type: type,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            logs.push(log);
+            
+            // Manter apenas os últimos MAX_LOGS
+            if (logs.length > MAX_LOGS) {
+                logs = logs.slice(-MAX_LOGS);
+            }
+            
+            saveSecureData();
+            updateTerminal();
+        }
+
+        function updateTerminal() {
+            const terminal = document.getElementById('terminalContent');
+            terminal.innerHTML = logs.map(log => `
+                <div class="log-entry log-${log.type}">
+                    [${sanitizeString(log.timestamp)}] ${sanitizeString(log.message)}
+                </div>
+            `).join('');
+        }
+
+        // ==================== RESPOSTAS ====================
+        function toggleResponses() {
+            document.getElementById('responsesPanel').classList.toggle('open');
+            updateResponses();
+        }
+
+        function updateResponses() {
+            const content = document.getElementById('responsesContent');
+            
+            if (responses.length === 0) {
+                content.innerHTML = '<p>Nenhuma resposta ainda.</p>';
+                return;
+            }
+
+            content.innerHTML = responses.map((response, index) => `
+                <div class="response-item">
+                    <div class="response-question" onclick="toggleAnswers(${index})">
+                        <span>Resposta #${index + 1} - ${sanitizeString(response.user)}</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="response-answers" id="answers-${index}">
+                        ${Object.entries(response.answers).map(([q, a]) => `
+                            <div class="answer-item">
+                                <strong>${sanitizeString(q)}:</strong> ${sanitizeString(a)}
+                            </div>
+                        `).join('')}
+                        <div class="answer-item">
+                            <small>Data: ${sanitizeString(response.timestamp)}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAnswers(index) {
+            const answersDiv = document.getElementById(`answers-${index}`);
+            if (answersDiv) {
+                answersDiv.classList.toggle('show');
+            }
+        }
+
+        // ==================== SUBMISSÃO ====================
+        function submitForm() {
+            const submitBtn = document.getElementById('submitFormBtn');
+            
+            try {
+                submitBtn.disabled = true;
+                
+                if (questions.length === 0) {
+                    alert('Não há perguntas para responder!');
+                    return;
+                }
+
+                const answers = {};
+                let hasAnswer = false
